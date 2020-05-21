@@ -13,7 +13,7 @@ public class Account {
 	private int balance;
 	private int transactions;
 	private Lock lock = new ReentrantLock();
-	private Condition balanceCondition = lock.newCondition();
+	private Condition conditionOfInsufficientBalance = lock.newCondition();
 
 	// It may work out to be handy for the account to
 	// have a pointer to its Bank.
@@ -41,12 +41,27 @@ public class Account {
 		return transactions;
 	}
 
-	public void withDraw(int amount){  }
+	public void withDraw(int amount) throws InterruptedException {
+		lock.lock();
+		while(balance<amount){
+			conditionOfInsufficientBalance.await();
+		}
+		balance-=amount;
+		lock.unlock();
+	}
 
-	public void deposit(int amount){ }
+	public void deposit(int amount){
+		lock.lock();
+		balance+=amount;
+		conditionOfInsufficientBalance.signalAll();
+		lock.unlock();
+	}
 
 	@Override
 	public String toString(){
-		return "acct:"+id+" bal:"+balance+" trans:"+transactions;
+		lock.lock();
+		String res="acct:"+id+" bal:"+balance+" trans:"+transactions;
+		lock.unlock();
+		return res;
 	}
 }

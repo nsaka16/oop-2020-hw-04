@@ -5,9 +5,9 @@
  one transaction. Supports toString.
 */
 public class Transaction {
-	public  int from;
-	public  int to;
-	public  int amount;
+	private  int from;
+	private   int to;
+	private  int amount;
 	
    	public Transaction(int from, int to, int amount) {
 		this.from = from;
