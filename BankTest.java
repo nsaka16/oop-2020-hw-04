@@ -1,6 +1,6 @@
+
 import org.junit.jupiter.api.Test;
 
-import java.util.AbstractCollection;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -10,6 +10,7 @@ public class BankTest {
     @Test
     public void testForSmallTxt(){
         Bank bank = new Bank();
+        bank.TESTS_CHECK =true;
         bank.processFile("small.txt",4);
         for(Account account : bank.getBankAccounts()){
             if(account.getId()%2==0){
@@ -24,6 +25,7 @@ public class BankTest {
     @Test
     public void test5KTxt(){
         Bank bank = new Bank();
+        bank.TESTS_CHECK =true;
         bank.processFile("5k.txt",4);
         for(Account account : bank.getBankAccounts()) {
             assertEquals(1000,account.getBalance());
@@ -33,6 +35,7 @@ public class BankTest {
     @Test
     public void test100KTxt(){
         Bank bank = new Bank();
+        bank.TESTS_CHECK =true;
         bank.processFile("100k.txt",4);
         for(Account account : bank.getBankAccounts()) {
             assertEquals(1000,account.getBalance());
@@ -43,6 +46,7 @@ public class BankTest {
     @Test
     public void testTransactionOverLimitedAmount(){
         Bank bank = new Bank();
+        bank.TESTS_CHECK =true;
         bank.processFile("CustomBankTransactions1",4);
     }
 
@@ -50,6 +54,7 @@ public class BankTest {
     @Test
     public void testTransactionOverLimitedAmount2(){
         Bank bank = new Bank();
+        bank.TESTS_CHECK =true;
         bank.processFile("CustomBankTransactions2",4);
         List<Account> accountList = bank.getBankAccounts();
         for(int i=3; i<accountList.size(); i++)assertEquals(0,accountList.get(i).getTransactions());
@@ -60,5 +65,4 @@ public class BankTest {
         assertEquals( 2200,accountList.get(1).getBalance());
         assertEquals( 300,accountList.get(0).getBalance());
     }
-
 }

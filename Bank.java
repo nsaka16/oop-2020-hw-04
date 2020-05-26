@@ -19,6 +19,7 @@ public class Bank {
 	private CountDownLatch countDownLatch;
 	private List<Account> accounts = new ArrayList<>(ACCOUNTS);
 	private BlockingQueue<Transaction> transactions;
+	public boolean TESTS_CHECK = false;
 	/*
 	 Reads transaction data (from/to/amt) from a file for processing.
 	 (provided code)
@@ -84,7 +85,7 @@ public class Bank {
 
 	private void tryToGenerateAccountResults() throws InterruptedException {
 		countDownLatch.await();
-		accounts.forEach(e->System.out.println(e.toString()));
+		if(!TESTS_CHECK	)accounts.forEach(e->System.out.println(e.toString()));
 	}
 
 	private void initializeBankAccounts(){

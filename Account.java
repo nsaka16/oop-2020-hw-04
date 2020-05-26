@@ -41,7 +41,7 @@ public class Account {
 		return transactions;
 	}
 
-	public void withDraw(int amount) throws InterruptedException {
+	public void withDraw(int amount) {
 		lock.lock();
 		System.out.println(balance);
 		System.out.println(amount);
