@@ -6,6 +6,8 @@
 import java.security.*;
 
 public class Cracker {
+
+
 	// Array of chars used to produce strings
 	public static final char[] CHARS = "abcdefghijklmnopqrstuvwxyz0123456789.,-!".toCharArray();
 	
@@ -43,20 +45,40 @@ public class Cracker {
 	
 	
 	public static void main(String[] args) {
-		if (args.length < 2) {
-			System.out.println("Args: target length [workers]");
-			System.exit(1);
+		Cracker cracker = new Cracker();
+		if (args.length  == 1) {
+			String password = args[0];
+			cracker.generationMode(password);
 		}
-		// args: targ len [num]
-		String targ = args[0];
-		int len = Integer.parseInt(args[1]);
-		int num = 1;
-		if (args.length>2) {
-			num = Integer.parseInt(args[2]);
+		else{
+			// args: targ len [num]
+			String targ = args[0];
+			int len = Integer.parseInt(args[1]);
+			int num = 1;
+			if (args.length>2) {
+				num = Integer.parseInt(args[2]);
+			}
+			// a! 34800e15707fae815d7c90d49de44aca97e2d759
+			// xyz 66b27417d37e024c46526c2f6d358a754fc552f3
 		}
-		// a! 34800e15707fae815d7c90d49de44aca97e2d759
-		// xyz 66b27417d37e024c46526c2f6d358a754fc552f3
-		
-		// YOUR CODE HERE
+	}
+
+	private void generationMode(String password){
+		byte[] hashOfPassword = tryToDigestPassword(password);
+		System.out.println(hexToString(hashOfPassword));
+
+	}
+
+	private byte[] tryToDigestPassword(String password) {
+		byte[] digestedPassword = null;
+		try {
+			MessageDigest passwordDigest = MessageDigest.getInstance("SHA-1");
+			passwordDigest.update(password.getBytes());
+			MessageDigest md = (MessageDigest) passwordDigest.clone();
+			digestedPassword = passwordDigest.digest();
+		} catch (NoSuchAlgorithmException | CloneNotSupportedException e) {
+			e.printStackTrace();
+		}
+		return digestedPassword;
 	}
 }

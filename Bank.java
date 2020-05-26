@@ -85,7 +85,7 @@ public class Bank {
 
 	private void tryToGenerateAccountResults() throws InterruptedException {
 		countDownLatch.await();
-		if(!TESTS_CHECK	)accounts.forEach(e->System.out.println(e.toString()));
+		if(!TESTS_CHECK	 )accounts.forEach(e->System.out.println(e.toString()));
 	}
 
 	private void initializeBankAccounts(){
