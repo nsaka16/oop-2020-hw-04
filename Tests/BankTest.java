@@ -53,12 +53,12 @@ public class BankTest {
         bank.processFile("CustomBankTransactions2",4);
         List<Account> accountList = bank.getBankAccounts();
         for(int i=3; i<accountList.size(); i++)assertEquals(0,accountList.get(i).getTransactions());
-        assertEquals(1,accountList.get(0).getTransactions());
+        assertEquals(2,accountList.get(0).getTransactions());
         assertEquals(1,accountList.get(1).getTransactions());
         assertEquals(1,accountList.get(2).getTransactions());
-        assertEquals(500,accountList.get(2));
-        assertEquals( 2200,accountList.get(1));
-        assertEquals( 300,accountList.get(0));
+        assertEquals(500,accountList.get(2).getBalance());
+        assertEquals( 2200,accountList.get(1).getBalance());
+        assertEquals( 300,accountList.get(0).getBalance());
     }
 
 }

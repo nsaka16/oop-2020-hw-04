@@ -43,22 +43,33 @@ public class Account {
 
 	public void withDraw(int amount) throws InterruptedException {
 		lock.lock();
-		while(balance<amount){
-			conditionOfInsufficientBalance.await();
-		}
+		System.out.println(balance);
+		System.out.println(amount);
+//		while(balance<amount){
+//			System.out.println("Account "+id);
+//			System.out.println("waiting.......");
+//			conditionOfInsufficientBalance.await();
+//		}
+		//System.out.println("Account: "+id+" withdrawed: "+amount);
 		balance-=amount;
+		transactions++;
 		lock.unlock();
 	}
 
 	public void deposit(int amount){
 		lock.lock();
 		balance+=amount;
-		conditionOfInsufficientBalance.signalAll();
+//		System.out.println("Account "+id);
+//		System.out.println("Account "+id+" depositing: "+amount);
+//		System.out.println("Signal all");
+//		conditionOfInsufficientBalance.signalAll();
+		transactions++;
 		lock.unlock();
 	}
 
 	@Override
 	public String toString(){
+		//This lock was needed while printing account during processing.
 		lock.lock();
 		String res="acct:"+id+" bal:"+balance+" trans:"+transactions;
 		lock.unlock();

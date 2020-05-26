@@ -14,9 +14,10 @@ import java.util.concurrent.CountDownLatch;
 public class Bank {
 	public static final int ACCOUNTS = 20;	 // number of accounts
 	public static final int INITIAL_ACCOUNT_BALANCE = 1000;
+	private  int NUM_WORKERS = 0;
 	private final Transaction nullTransaction = new Transaction(-1,0,0);
 	private CountDownLatch countDownLatch;
-	private List<Account> accounts = new ArrayList<>(20);
+	private List<Account> accounts = new ArrayList<>(ACCOUNTS);
 	private BlockingQueue<Transaction> transactions;
 	/*
 	 Reads transaction data (from/to/amt) from a file for processing.
@@ -64,7 +65,8 @@ public class Bank {
 	 -wait for the workers to finish
 	*/
 	public void processFile(String file, int numWorkers) {
-		initializeBankAccounts(this);
+		NUM_WORKERS = numWorkers;
+		initializeBankAccounts();
 		countDownLatch = new CountDownLatch(numWorkers);
 		transactions = new ArrayBlockingQueue<>( numWorkers);
 		startUpWorkerThreads(numWorkers);
@@ -74,21 +76,20 @@ public class Bank {
 
 	private void generateAccountDetails(){
 		try {
-			tryToGenerateAccountDetails();
+			tryToGenerateAccountResults();
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
 	}
 
-	private void tryToGenerateAccountDetails() throws InterruptedException {
+	private void tryToGenerateAccountResults() throws InterruptedException {
 		countDownLatch.await();
-
-
+		accounts.forEach(e->System.out.println(e.toString()));
 	}
 
-	private void initializeBankAccounts(Bank bankOfAccounts){
-		for(int i=0; i<accounts.size(); i++){
-			accounts.add(new Account(bankOfAccounts,i,INITIAL_ACCOUNT_BALANCE));
+	private void initializeBankAccounts(){
+		for(int i=0; i<ACCOUNTS; i++){
+			accounts.add(new Account(this,i,INITIAL_ACCOUNT_BALANCE));
 		}
 	}
 
@@ -99,7 +100,7 @@ public class Bank {
 	}
 
 	private void addNullTransactionsForEachWorkerThread() throws InterruptedException {
-		for(int workerThreadIndex=0; workerThreadIndex<transactions.size(); workerThreadIndex++)
+		for(int workerThreadIndex=0; workerThreadIndex<NUM_WORKERS; workerThreadIndex++)
 			transactions.put(nullTransaction);
 	}
 	/*
@@ -136,13 +137,12 @@ public class Bank {
 
 	private void tryToProcessTransaction() throws InterruptedException {
 		Transaction transaction = transactions.take();
-		while(!transaction.equals(nullTransaction)){
+		while(! (transaction == nullTransaction)){
 			//Should this whole process be atomic?
 			Account from = accounts.get(transaction.getFrom());
 			Account to = accounts.get(transaction.getTo());
 			from.withDraw(transaction.getAmount());
 			to.deposit(transaction.getAmount());
-			/////
 			transaction=transactions.take();
 		}
 		countDownLatch.countDown();
