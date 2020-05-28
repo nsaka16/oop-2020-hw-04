@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class Cracker {
 
@@ -53,66 +54,93 @@ public class Cracker {
         Cracker cracker = new Cracker();
         if (args.length == 1) {
             String password = args[0];
-            System.out.println(cracker.generateHashOfString(password));
+            System.out.println(cracker.generateHashCodeOfString(password));
         } else if (args.length > 2) {
             String hashValue = args[0];
             int maxLengthOfPasswordToBeGuessed = Integer.parseInt(args[1]);
-            int numberOfThreadsUsedInCrack = 1;
-            numberOfThreadsUsedInCrack = Integer.parseInt(args[2]);
-            if (numberOfThreadsUsedInCrack > 40)
+            int numberOfThreadsUsedInCracking = 1;
+            numberOfThreadsUsedInCracking = Integer.parseInt(args[2]);
+            if (numberOfThreadsUsedInCracking > 40)
                 throw new IllegalArgumentException("Max threads allowed: 40");
-            cracker.crackHashCodeOfArbitraryPassword(hashValue.getBytes(), maxLengthOfPasswordToBeGuessed, numberOfThreadsUsedInCrack).forEach(System.out::println);
+            System.out.println(cracker.crackGivenHashCode(Cracker.hexToArray(hashValue), maxLengthOfPasswordToBeGuessed, numberOfThreadsUsedInCracking));
             // a! 34800e15707fae815d7c90d49de44aca97e2d759
             // xyz 66b27417d37e024c46526c2f6d358a754fc552f3
         } else {
             throw new IllegalArgumentException("Number of arguments not acceptable");
         }
-
     }
 
-    public String generateHashOfString(String password) {
+    protected String generateHashCodeOfString(String password) {
         byte[] hashOfPassword = digestPassword(password);
         return hexToString(hashOfPassword);
     }
 
-    public List<String> crackHashCodeOfArbitraryPassword(byte[] hashValueOfPassword, int maxLengthOfPassword, int numberOfThreadsAllowed) throws InterruptedException {
+    protected String crackGivenHashCode(byte[] hashValueOfPassword, int maxLengthOfPassword, int numberOfThreadsAllowed) throws InterruptedException {
         countDownLatch = new CountDownLatch(numberOfThreadsAllowed);
-        setupResourcesForUpcomingCracking();
-        List<String> resultList = new ArrayList<>();
-        int arbitraryPartOfInputSpace = CHARS.length / numberOfThreadsAllowed;
-        for (int partOfWorkToDo = 0; partOfWorkToDo < numberOfThreadsAllowed; partOfWorkToDo++) {
-            int finalPartOfWorkToDo = partOfWorkToDo;
-            new Thread(() -> {
-                //Kentoba luwoba samushaos gayopisas problema ar iqneba?
-                for (int startCharacterIndex = finalPartOfWorkToDo * arbitraryPartOfInputSpace;
-                     startCharacterIndex < (finalPartOfWorkToDo+1)*arbitraryPartOfInputSpace;
-                     startCharacterIndex++) {
+        String potentialResult = startCrackingThePassword(hashValueOfPassword,maxLengthOfPassword,numberOfThreadsAllowed);
+        return potentialResult;
+    }
 
-
-                }
-                countDownLatch.countDown();
-            }).start();
+    //Only works for good number like 4,8,2,10,5
+    private String startCrackingThePassword(byte[] hashValueOfPassword, int maxLengthOfPassword, int numberOfThreadsAllowed) throws InterruptedException {
+        List<String> result = new ArrayList<>();
+        for(int workerThread =0; workerThread<numberOfThreadsAllowed; workerThread++){
+            startUpThread(hashValueOfPassword, maxLengthOfPassword, CHARS.length/numberOfThreadsAllowed, result, workerThread);
         }
         countDownLatch.await();
-        return resultList;
+        return result.get(0);
     }
 
-    private void setupResourcesForUpcomingCracking() {
-
+    private void startUpThread(byte[] hashValueOfPassword, int maxLengthOfPassword, int sizeOfWorkForEachThread, List<String> result, int workerThread) {
+        new Thread(()->{
+            crackPasswordUsingPartOfCharacters(hashValueOfPassword, maxLengthOfPassword, sizeOfWorkForEachThread, result, workerThread);
+        }).start();
     }
 
+    private void crackPasswordUsingPartOfCharacters(byte[] hashValueOfPassword, int maxLengthOfPassword, int sizeOfWorkForEachThread, List<String> result, int finalWorkerThread) {
+        int starIndex = finalWorkerThread *sizeOfWorkForEachThread;
+        int endIndex = (finalWorkerThread +1)*sizeOfWorkForEachThread;
+        for(int i=starIndex; i<endIndex; i++){
+            String maybeResult = findPasswordRecursive(CHARS[i],hashValueOfPassword,maxLengthOfPassword);
+            if(maybeResult!=null) result.add(maybeResult);
+        }
+        countDownLatch.countDown();
+    }
+
+    private String findPasswordRecursive(char startingChar, byte[] hash, int maxLengthOfPassword){
+        List<String> list = new ArrayList<>();
+        findPasswordRecursiveHelper(startingChar+"",hash,list,maxLengthOfPassword);
+        return list.size()==0?null:list.get(0);
+    }
+
+    protected void findPasswordRecursiveHelper(String result, byte[] hash, List<String> listOfResults, int maxAllowedLength){
+        if(result.length()>maxAllowedLength){
+            return;
+        }
+        else if(passedPasswordEqualsToHash(result,hash)){
+            listOfResults.add(result);
+            return;
+        }
+        for(int i=0; i<CHARS.length; i++){
+            findPasswordRecursiveHelper(result+CHARS[i],hash,listOfResults,maxAllowedLength);
+        }
+    }
+
+    public boolean passedPasswordEqualsToHash(String password,byte[] hash){
+        return Arrays.equals(hash,digestPassword(password));
+    }
 
     private byte[] digestPassword(String password) {
         byte[] digestedPassword = null;
         try {
             digestedPassword = tryToDigestPasswordUsingMessageDigest(password);
-        } catch (NoSuchAlgorithmException | CloneNotSupportedException e) {
+        } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
         }
         return digestedPassword;
     }
 
-    private byte[] tryToDigestPasswordUsingMessageDigest(String password) throws NoSuchAlgorithmException, CloneNotSupportedException {
+    private byte[] tryToDigestPasswordUsingMessageDigest(String password) throws NoSuchAlgorithmException {
         MessageDigest passwordDigest = MessageDigest.getInstance("SHA-1");
         passwordDigest.update(password.getBytes());
         return passwordDigest.digest();
